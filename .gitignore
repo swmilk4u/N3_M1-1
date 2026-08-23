@@ -1,8 +1,8 @@
-﻿# 임시 스크립트
-make_notebook.py
-make_stats.py
-write_report.py
-generate_analysis.py
+# 임시 스크립트
+make_*.py
+write_*.py
+update_*.py
+sync_*.py
 
 # Python 캐시
 __pycache__/

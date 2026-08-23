@@ -56,7 +56,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>📖 0. 분석 용어 해설</b></summary>
 <br>
 
@@ -83,7 +83,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>1. 분석 주제 및 선정 이유</b></summary>
 <br>
 
@@ -97,7 +97,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>2. 분석 질문 (4개)</b></summary>
 <br>
 
@@ -112,7 +112,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>3. 데이터 설명</b></summary>
 <br>
 
@@ -134,7 +134,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>4. 분석 결과 및 시각화</b></summary>
 <br>
 
@@ -199,7 +199,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>5. 인사이트 (4개)</b></summary>
 <br>
 
@@ -231,7 +231,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>6. 결론 및 한계점</b></summary>
 <br>
 
@@ -254,7 +254,7 @@ jupyter notebook analysis.ipynb
 
 ---
 
-<details>
+<details open>
 <summary><b>7. AI 사용 로그</b></summary>
 <br>
 

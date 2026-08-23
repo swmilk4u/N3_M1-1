@@ -16,8 +16,6 @@ N3_M1-1_Data trend/
 │   ├── 02_moving_average.png    # 이동평균 (20일·60일)
 │   ├── 03_monthly_return.png    # 월별 수익률 히트맵
 │   └── 04_decomposition.png     # 시계열 분해 (STL, 보너스)
-├── 01_document/
-│   └── N3_M1-1 과제미션.txt
 ├── analysis.ipynb               # 메인 분석 노트북
 ├── REPORT.md                    # 전체 분석 리포트
 ├── requirements.txt             # 의존성 목록

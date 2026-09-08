@@ -1,4 +1,4 @@
-﻿import yfinance as yf
+import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -22,15 +22,15 @@ plt.rcParams['axes.unicode_minus'] = False
 COLOR_HYX  = '#E65100'   # SK하이닉스 (주황)
 COLOR_SP   = '#1565C0'   # S&P 500 (블루)
 
-# 데이터 로드
+# 데이터 로드 (2025-01-02 ~ 2026-08-31)
 hyx = pd.read_csv(os.path.join(DATA_DIR, 'skhynix_2025_2026.csv'), index_col=0, parse_dates=True)
 sp  = pd.read_csv(os.path.join(DATA_DIR, 'sp500_2025_2026.csv'),   index_col=0, parse_dates=True)
 
 if isinstance(hyx.columns, pd.MultiIndex): hyx.columns = hyx.columns.get_level_values(0)
 if isinstance(sp.columns,  pd.MultiIndex): sp.columns  = sp.columns.get_level_values(0)
 
-hyx_close = hyx['Close'].dropna()
-sp_close  = sp['Close'].dropna()
+hyx_close = hyx['Close'].dropna().loc[:'2026-08-31']
+sp_close  = sp['Close'].dropna().loc[:'2026-08-31']
 
 hyx_norm = hyx_close / hyx_close.iloc[0] * 100
 sp_norm  = sp_close  / sp_close.iloc[0]  * 100

@@ -157,13 +157,13 @@ N3_M1-1_Data trend/
 
 ## 🎁 보너스 과제 수행 현황
 
-### ✅ 보너스 ① — 시계열 심화: STL 분해 (수행 완료)
+### ✅ 보너스 ① — 시계열 심화: STL(추세·계절성·잔차 시계열 분해) (수행 완료)
 
 > **요구사항**: 추세/계절성을 분리해 해석하고, 시각화 1개 이상 포함
 
 | 항목 | 내용 |
 |------|------|
-| 적용 기법 | STL(Seasonal and Trend decomposition using Loess), `period=20` (약 1개월 거래일) |
+| 적용 기법 | STL(Seasonal and Trend decomposition using Loess: 국소 회귀 기반 시계열 분해), `period=20` (약 1개월 거래일) |
 | 시각화 | [04\_decomposition.png](images/04_decomposition.png) — 원본·추세·계절성·잔차 4분할 |
 | 해석 | [REPORT.md §4-4 + 인사이트 4](REPORT.md) — "상승의 90% 이상이 장기 추세, 계절성 효과는 미미, 잔차 스파이크는 공시 이벤트" |
 

@@ -90,14 +90,14 @@ assets = st.sidebar.multiselect(
 
 # 이동평균 설정
 st.sidebar.markdown("---")
-st.sidebar.subheader("📐 이동평균 설정")
-ma_short = st.sidebar.slider("단기 이동평균 (일)", 5, 60, 20)
-ma_long  = st.sidebar.slider("장기 이동평균 (일)", 20, 120, 60)
+st.sidebar.subheader("📐 이동평균(MA: Moving Average) 설정")
+ma_short = st.sidebar.slider("단기 이동평균선 (일)", 5, 60, 20)
+ma_long  = st.sidebar.slider("장기 이동평균선 (일)", 20, 120, 60)
 
 # STL 주기
 st.sidebar.markdown("---")
-st.sidebar.subheader("🔬 STL 분해 설정")
-stl_period = st.sidebar.slider("STL period (거래일)", 5, 60, 20)
+st.sidebar.subheader("🔬 STL(시계열 분해) 설정")
+stl_period = st.sidebar.slider("STL 주기/Period (거래일 기준)", 5, 60, 20)
 
 # ── 데이터 필터링 ────────────────────────────────────────────
 hyx = hyx_raw.loc[str(start_d):str(end_d)].copy()
@@ -119,20 +119,20 @@ if len(hyx_close) > 1 and len(sp_close) > 1:
     corr    = hyx_close.pct_change().corr(sp_close.pct_change())
 
     k1, k2, k3, k4, k5 = st.columns(5)
-    k1.metric("SK하이닉스 수익률", f"{hyx_ret:+.1f}%")
-    k2.metric("S&P 500 수익률",   f"{sp_ret:+.1f}%")
-    k3.metric("SK하이닉스 변동성", f"{hyx_vol:.2f}%")
-    k4.metric("S&P 500 변동성",   f"{sp_vol:.2f}%")
-    k5.metric("상관계수",          f"{corr:.3f}")
+    k1.metric("SK하이닉스 누적수익률", f"{hyx_ret:+.1f}%")
+    k2.metric("S&P 500 누적수익률",   f"{sp_ret:+.1f}%")
+    k3.metric("SK하이닉스 변동성(위험도)", f"{hyx_vol:.2f}%")
+    k4.metric("S&P 500 변동성(위험도)",   f"{sp_vol:.2f}%")
+    k5.metric("상관계수(동행성 지표)",      f"{corr:.3f}")
 
 st.markdown("---")
 
 # ── 탭 구성 ──────────────────────────────────────────────────
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 가격 추이 비교",
-    "📉 이동평균 & 크로스",
-    "🗓️ 월별 수익률 히트맵",
-    "🔬 시계열 분해 (STL)",
+    "📊 가격 추이 비교 (정규화·이중축)",
+    "📉 이동평균 & 골든/데드크로스(추세신호)",
+    "🗓️ 월별·분기별 수익률 패턴",
+    "🔬 STL 시계열 분해 (추세·계절성·잔차)",
 ])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -230,10 +230,10 @@ with tab2:
         dc_dates = [str(d.date()) for d in close.index[dead]]
         c1, c2 = st.columns(2)
         with c1:
-            st.markdown(f"🔵 **골든크로스** ({len(gc_dates)}회)")
+            st.markdown(f"🔵 **골든크로스(Golden Cross: 단기선이 장기선을 상향 돌파하는 상승 전환 신호)** ({len(gc_dates)}회)")
             st.write(gc_dates if gc_dates else ["없음"])
         with c2:
-            st.markdown(f"🔴 **데드크로스** ({len(dc_dates)}회)")
+            st.markdown(f"🔴 **데드크로스(Dead Cross: 단기선이 장기선을 하향 돌파하는 하락 전환 신호)** ({len(dc_dates)}회)")
             st.write(dc_dates if dc_dates else ["없음"])
     else:
         st.warning(f"선택한 기간이 {ma_long}일보다 짧아 이동평균을 계산할 수 없습니다.")
@@ -307,8 +307,12 @@ with tab4:
         res = stl.fit()
 
         fig = make_subplots(rows=4, cols=1, shared_xaxes=True,
-                            subplot_titles=["① 원본 종가", "② 장기 추세 (Trend)",
-                                            "③ 계절성 (Seasonal)", "④ 잔차 (Residual)"],
+                            subplot_titles=[
+                                "① 원본 종가 (Raw Price: 실제 시장 가격)",
+                                "② 장기 추세 (Trend: 전체적인 우상향/우하향 흐름)",
+                                "③ 계절성 (Seasonal: 일정 주기로 반복되는 패턴)",
+                                "④ 잔차 (Residual: 이벤트·뉴스 등 불규칙 노이즈)"
+                            ],
                             vertical_spacing=0.06)
 
         fig.add_trace(go.Scatter(x=close4.index, y=close4.values,
@@ -327,14 +331,19 @@ with tab4:
                       line_color="white", opacity=0.4)
 
         fig.update_layout(
-            title=f"{target4} — STL 시계열 분해 (period={stl_period})",
-            template="plotly_dark", height=700,
+            title=f"{target4} — STL 시계열 분해 (분석 주기/Period={stl_period}일)",
+            template="plotly_dark", height=720,
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        st.info(f"💡 사이드바에서 **STL period**를 바꿔보며 추세/계절성 분리 결과가 어떻게 달라지는지 탐색해 보세요.")
+        st.info(
+            "💡 **STL(Seasonal and Trend decomposition using Loess) 시계열 분해란?**\n\n"
+            "복잡하게 출렁이는 주가 데이터를 **① 장기 추세(Trend)**, **② 주기적 계절성(Seasonal)**, **③ 불규칙 잔차(Residual: 노이즈)** 세 가지 요소로 명확히 분리하여, "
+            "주가 상승이 일시적 유행인지 구조적 대세 상승인지를 분석하는 통계 기법입니다.\n\n"
+            "- 좌측 사이드바의 **STL 주기(Period)**를 조절하여 단기/중기 패턴 분리 결과를 비교해 보세요."
+        )
     else:
-        st.warning(f"선택한 기간이 STL period({stl_period}일)의 2배보다 짧습니다.")
+        st.warning(f"선택한 기간이 STL 주기({stl_period}일)의 2배보다 짧습니다.")
 
 # ── 푸터 ─────────────────────────────────────────────────────
 st.markdown("---")

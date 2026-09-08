@@ -32,8 +32,10 @@ N3_M1-1_Data trend/
 | 1 | 분석 리포트 | **[REPORT.md](REPORT.md)** | 분석 주제 · 질문 · 시각화 · 인사이트 · 결론 전체 |
 | 2 | 시각화 결과물 | **[images/](images/)** | PNG 4개 (`01`~`04`) |
 | 3 | Python 실험 노트북 | **[analysis.ipynb](analysis.ipynb)** | 데이터 수집 · 전처리 · 시각화 · 인사이트 전 과정 |
-| 4 | 의존성 목록 | **[requirements.txt](requirements.txt)** | 재현성 보장 라이브러리 목록 |
-| 5 | 이미지 재생성 스크립트 | **[generate\_analysis.py](generate_analysis.py)** | Jupyter 없이 PNG만 일괄 재생성 |
+| 4 | 웹 대시보드 (보너스) | **[n3-m1-1.streamlit.app](https://n3-m1-1.streamlit.app/)** | **온라인 배포 URL (설치 없이 브라우저에서 바로 탐색)** |
+| 5 | 대시보드 코드 (보너스) | **[dashboard.py](dashboard.py)** | Streamlit + Plotly 인터랙티브 대시보드 소스코드 |
+| 6 | 의존성 목록 | **[requirements.txt](requirements.txt)** | 재현성 보장 라이브러리 목록 |
+| 7 | 이미지 재생성 스크립트 | **[generate\_analysis.py](generate_analysis.py)** | Jupyter 없이 PNG만 일괄 재생성 |
 
 ---
 
@@ -175,9 +177,10 @@ N3_M1-1_Data trend/
 
 | 항목 | 내용 |
 |------|------|
+| **웹 대시보드 URL** | **🌐 [https://n3-m1-1.streamlit.app/](https://n3-m1-1.streamlit.app/)** |
 | 도구 | Streamlit + Plotly (인터랙티브 웹 대시보드) |
-| 파일 | [dashboard.py](dashboard.py) |
-| 제출 형식 | **(2) 로컬 실행 + 실행 방법 문서** |
+| 소스 파일 | [dashboard.py](dashboard.py) |
+| 제출 옵션 | **(1) 배포 URL** + **(2) 로컬 실행 문서** 모두 충족 |
 
 #### 실행 방법
 

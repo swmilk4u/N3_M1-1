@@ -1,6 +1,8 @@
 # SK하이닉스 / S&P 500 주가 트렌드 분석 리포트 (2025.1~2026.8)
 
 > **한 줄 요약**: AI·HBM 수요 폭증으로 SK하이닉스는 2025년 1월~2026년 8월 동안 +923%를 기록, S&P 500(+30.8%)보다 약 29배 높은 성과를 냈다.
+>
+> 🌐 **인터랙티브 웹 대시보드 바로가기**: [https://n3-m1-1.streamlit.app/](https://n3-m1-1.streamlit.app/) *(클릭 시 브라우저에서 직접 조건/기간 변경 탐색 가능)*
 
 ---
 
@@ -212,11 +214,16 @@
 
 ---
 
-## 8. 실행 방법
+## 8. 실행 방법 및 대시보드 접속
 
-자세한 실행 방법은 [README.md](README.md)를 참고하세요.
+- **🌐 웹 대시보드 (설치 없이 바로 확인)**: [https://n3-m1-1.streamlit.app/](https://n3-m1-1.streamlit.app/)
+- **💻 로컬 실행 방법**: 자세한 내용은 [README.md](README.md)를 참고하세요.
 
 ```bash
+# 로컬 분석 노트북 실행
 pip install -r requirements.txt
 jupyter notebook analysis.ipynb
+
+# 로컬 대시보드 실행
+streamlit run dashboard.py
 ```

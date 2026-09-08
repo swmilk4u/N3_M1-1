@@ -139,10 +139,66 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # TAB 1 — 가격 추이 (정규화 + 이중 축)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tab1:
-    view = st.radio("보기 모드", ["정규화 (100 기준)", "이중 축 (원화 / 포인트)"],
-                    horizontal=True)
+    view = st.radio(
+        "보기 모드 선택",
+        [
+            "이중 축 (원화 / 포인트: 스케일 왜곡 방지)",
+            "로그 스케일 (Log Scale: 비율 성장률 왜곡 없는 비교)",
+            "정규화 선형 (시작일 = 100: 단순 지수 비교)",
+        ],
+        index=0,  # 기본값을 이중 축으로 설정
+        horizontal=True,
+    )
 
-    if view == "정규화 (100 기준)":
+    if view == "이중 축 (원화 / 포인트: 스케일 왜곡 방지)":
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        if "SK하이닉스" in assets and len(hyx_close) > 0:
+            fig.add_trace(go.Scatter(
+                x=hyx_close.index, y=hyx_close.values,
+                name="SK하이닉스 (원)", line=dict(color=C_HYX, width=2.5)),
+                secondary_y=False)
+        if "S&P 500" in assets and len(sp_close) > 0:
+            fig.add_trace(go.Scatter(
+                x=sp_close.index, y=sp_close.values,
+                name="S&P 500 (pt)", line=dict(color=C_SP, width=2.5)),
+                secondary_y=True)
+        fig.update_layout(
+            title="이중 축(Dual Y-Axis) 스케일 보정 비교",
+            xaxis_title="날짜",
+            template="plotly_dark", height=520,
+            legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0.5)"),
+        )
+        fig.update_yaxes(title_text="SK하이닉스 주가 (KRW, 원)", secondary_y=False)
+        fig.update_yaxes(title_text="S&P 500 지수 (USD, pt)", secondary_y=True)
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("💡 **이중 축 모드**: 좌측(원화)과 우측(포인트)에 독립된 축을 사용하여 두 자산의 흐름을 왜곡 없이 동시에 명확히 관찰합니다.")
+
+    elif view == "로그 스케일 (Log Scale: 비율 성장률 왜곡 없는 비교)":
+        fig = go.Figure()
+        if "SK하이닉스" in assets and len(hyx_close) > 0:
+            norm_hyx = hyx_close / hyx_close.iloc[0] * 100
+            fig.add_trace(go.Scatter(
+                x=norm_hyx.index, y=norm_hyx.values,
+                name="SK하이닉스 (로그 정규화)", line=dict(color=C_HYX, width=2.5)))
+        if "S&P 500" in assets and len(sp_close) > 0:
+            norm_sp = sp_close / sp_close.iloc[0] * 100
+            fig.add_trace(go.Scatter(
+                x=norm_sp.index, y=norm_sp.values,
+                name="S&P 500 (로그 정규화)", line=dict(color=C_SP, width=2.5)))
+        fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.5,
+                      annotation_text="기준점(100)")
+        fig.update_layout(
+            title="로그 스케일(Log Scale) 정규화 수익률 비교 (시작일 = 100)",
+            yaxis_title="정규화 지수 (로그 눈금)",
+            xaxis_title="날짜",
+            yaxis_type="log",
+            template="plotly_dark", height=520,
+            legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0.5)"),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("💡 **로그 스케일 모드**: 지수 축을 로그로 변환하여, +30% 상승과 +900% 폭등이 같은 화면에 있어도 S&P 500이 바닥에 깔리지 않고 비율(%) 단위 기울기가 왜곡 없이 명확히 드러납니다.")
+
+    else:  # 정규화 선형
         fig = go.Figure()
         if "SK하이닉스" in assets and len(hyx_close) > 0:
             norm = hyx_close / hyx_close.iloc[0] * 100
@@ -156,32 +212,14 @@ with tab1:
                 name="S&P 500", line=dict(color=C_SP, width=2)))
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.5)
         fig.update_layout(
-            title="정규화 수익률 비교 (시작일 = 100)",
-            yaxis_title="정규화 지수",
+            title="정규화 선형 수익률 비교 (시작일 = 100)",
+            yaxis_title="정규화 지수 (선형 눈금)",
             xaxis_title="날짜",
-            template="plotly_dark", height=500,
+            template="plotly_dark", height=520,
+            legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0.5)"),
         )
         st.plotly_chart(fig, use_container_width=True)
-
-    else:  # 이중 축
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        if "SK하이닉스" in assets and len(hyx_close) > 0:
-            fig.add_trace(go.Scatter(
-                x=hyx_close.index, y=hyx_close.values,
-                name="SK하이닉스 (원)", line=dict(color=C_HYX, width=2)),
-                secondary_y=False)
-        if "S&P 500" in assets and len(sp_close) > 0:
-            fig.add_trace(go.Scatter(
-                x=sp_close.index, y=sp_close.values,
-                name="S&P 500 (pt)", line=dict(color=C_SP, width=2)),
-                secondary_y=True)
-        fig.update_layout(
-            title="이중 축 스케일 보정 비교",
-            template="plotly_dark", height=500,
-        )
-        fig.update_yaxes(title_text="SK하이닉스 (원)", secondary_y=False)
-        fig.update_yaxes(title_text="S&P 500 (포인트)", secondary_y=True)
-        st.plotly_chart(fig, use_container_width=True)
+        st.caption("⚠️ **선형 정규화 한계**: 동일한 선형 축을 공유하므로, SK하이닉스의 폭등(+923%)으로 인해 S&P 500(+30.8%)이 바닥에 납작하게 깔려 보이는 '스케일 왜곡'이 발생합니다. 상단의 '이중 축' 또는 '로그 스케일'을 권장합니다.")
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # TAB 2 — 이동평균 & 골든/데드 크로스

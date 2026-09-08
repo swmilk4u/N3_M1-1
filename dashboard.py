@@ -36,10 +36,23 @@ DATA = os.path.join(BASE, "data")
 
 @st.cache_data
 def load_data():
-    hyx = pd.read_csv(os.path.join(DATA, "skhynix_2025_2026.csv"),
-                       index_col=0, parse_dates=True)
-    sp  = pd.read_csv(os.path.join(DATA, "sp500_2025_2026.csv"),
-                       index_col=0, parse_dates=True)
+    hyx_path = os.path.join(DATA, "skhynix_2025_2026.csv")
+    sp_path  = os.path.join(DATA, "sp500_2025_2026.csv")
+
+    if os.path.exists(hyx_path) and os.path.exists(sp_path):
+        hyx = pd.read_csv(hyx_path, index_col=0, parse_dates=True)
+        sp  = pd.read_csv(sp_path, index_col=0, parse_dates=True)
+    else:
+        try:
+            url_hyx = "https://raw.githubusercontent.com/swmilk4u/N3_M1-1/main/data/skhynix_2025_2026.csv"
+            url_sp  = "https://raw.githubusercontent.com/swmilk4u/N3_M1-1/main/data/sp500_2025_2026.csv"
+            hyx = pd.read_csv(url_hyx, index_col=0, parse_dates=True)
+            sp  = pd.read_csv(url_sp, index_col=0, parse_dates=True)
+        except Exception:
+            import yfinance as yf
+            hyx = yf.download("000660.KS", start="2025-01-01", end="2026-08-31", progress=False)
+            sp  = yf.download("^GSPC", start="2025-01-01", end="2026-08-31", progress=False)
+
     if isinstance(hyx.columns, pd.MultiIndex):
         hyx.columns = hyx.columns.get_level_values(0)
     if isinstance(sp.columns, pd.MultiIndex):

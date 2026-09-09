@@ -90,7 +90,8 @@ assets = st.sidebar.multiselect(
 
 # 이동평균 설정
 st.sidebar.markdown("---")
-st.sidebar.subheader("📐 이동평균(MA: Moving Average) 설정")
+st.sidebar.subheader("📐 이동평균(MA) 설정")
+st.sidebar.caption("💡 설정 변경 시 **[📊 가격 추이]** 및 **[📉 이동평균]** 탭에 즉시 실시간 반영됩니다.")
 ma_short = st.sidebar.slider("단기 이동평균선 (일)", 5, 60, 20)
 ma_long  = st.sidebar.slider("장기 이동평균선 (일)", 20, 120, 60)
 
@@ -98,6 +99,13 @@ ma_long  = st.sidebar.slider("장기 이동평균선 (일)", 20, 120, 60)
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔬 STL(시계열 분해) 설정")
 stl_period = st.sidebar.slider("STL 주기/Period (거래일 기준)", 5, 60, 20)
+
+# ── 설정 변경 감지 및 사용자 피드백 (Toast 알림) ───────────────
+current_params = (start_d, end_d, tuple(assets), ma_short, ma_long, stl_period)
+if "last_params" in st.session_state:
+    if st.session_state["last_params"] != current_params:
+        st.toast(f"⚡ 실시간 반영 완료: MA {ma_short}일/{ma_long}일 | STL {stl_period}일", icon="🔄")
+st.session_state["last_params"] = current_params
 
 # ── 데이터 필터링 ────────────────────────────────────────────
 hyx = hyx_raw.loc[str(start_d):str(end_d)].copy()
@@ -108,7 +116,7 @@ sp_close  = sp["Close"].dropna()
 
 # ── 헤더 ─────────────────────────────────────────────────────
 st.title("📈 SK하이닉스 / S&P 500 주가 트렌드 분석 대시보드")
-st.caption("기간·자산·이동평균 일수를 사이드바에서 변경하며 탐색하세요.")
+st.caption("기간·자산·이동평균 일수를 사이드바에서 변경하면 모든 차트에 즉시 인터랙티브하게 반영됩니다.")
 
 # ── KPI 카드 ─────────────────────────────────────────────────
 if len(hyx_close) > 1 and len(sp_close) > 1:
@@ -139,39 +147,69 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # TAB 1 — 가격 추이 (정규화 + 이중 축)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tab1:
-    view = st.radio(
-        "보기 모드 선택",
-        [
-            "이중 축 (원화 / 포인트: 스케일 왜곡 방지)",
-            "로그 스케일 (Log Scale: 비율 성장률 왜곡 없는 비교)",
-            "정규화 선형 (시작일 = 100: 단순 지수 비교)",
-        ],
-        index=0,  # 기본값을 이중 축으로 설정
-        horizontal=True,
-    )
+    col_view, col_opt = st.columns([3, 2])
+    with col_view:
+        view = st.radio(
+            "보기 모드 선택",
+            [
+                "이중 축 (원화 / 포인트: 스케일 왜곡 방지)",
+                "로그 스케일 (Log Scale: 비율 성장률 왜곡 없는 비교)",
+                "정규화 선형 (시작일 = 100: 단순 지수 비교)",
+            ],
+            index=0,
+            horizontal=True,
+        )
+    with col_opt:
+        show_ma = st.checkbox(
+            f"📐 이동평균선 함께 보기 (단기 {ma_short}일 / 장기 {ma_long}일)",
+            value=True,
+            help="사이드바에서 설정한 단기/장기 이동평균선을 메인 가격 차트 위에도 점선으로 오버레이합니다."
+        )
 
     if view == "이중 축 (원화 / 포인트: 스케일 왜곡 방지)":
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         if "SK하이닉스" in assets and len(hyx_close) > 0:
             fig.add_trace(go.Scatter(
                 x=hyx_close.index, y=hyx_close.values,
-                name="SK하이닉스 (원)", line=dict(color=C_HYX, width=2.5)),
+                name="SK하이닉스 (종가)", line=dict(color=C_HYX, width=2.5)),
                 secondary_y=False)
+            if show_ma and len(hyx_close) >= ma_short:
+                fig.add_trace(go.Scatter(
+                    x=hyx_close.index, y=hyx_close.rolling(ma_short).mean(),
+                    name=f"SK하이닉스 MA({ma_short}일)", line=dict(color=C_HYX, width=1.5, dash="dot")),
+                    secondary_y=False)
+            if show_ma and len(hyx_close) >= ma_long:
+                fig.add_trace(go.Scatter(
+                    x=hyx_close.index, y=hyx_close.rolling(ma_long).mean(),
+                    name=f"SK하이닉스 MA({ma_long}일)", line=dict(color=C_HYX, width=1.5, dash="dash")),
+                    secondary_y=False)
+
         if "S&P 500" in assets and len(sp_close) > 0:
             fig.add_trace(go.Scatter(
                 x=sp_close.index, y=sp_close.values,
-                name="S&P 500 (pt)", line=dict(color=C_SP, width=2.5)),
+                name="S&P 500 (종가)", line=dict(color=C_SP, width=2.5)),
                 secondary_y=True)
+            if show_ma and len(sp_close) >= ma_short:
+                fig.add_trace(go.Scatter(
+                    x=sp_close.index, y=sp_close.rolling(ma_short).mean(),
+                    name=f"S&P 500 MA({ma_short}일)", line=dict(color=C_SP, width=1.5, dash="dot")),
+                    secondary_y=True)
+            if show_ma and len(sp_close) >= ma_long:
+                fig.add_trace(go.Scatter(
+                    x=sp_close.index, y=sp_close.rolling(ma_long).mean(),
+                    name=f"S&P 500 MA({ma_long}일)", line=dict(color=C_SP, width=1.5, dash="dash")),
+                    secondary_y=True)
+
         fig.update_layout(
-            title="이중 축(Dual Y-Axis) 스케일 보정 비교",
+            title="이중 축(Dual Y-Axis) 스케일 보정 비교" + (f" (MA {ma_short}일/{ma_long}일 포함)" if show_ma else ""),
             xaxis_title="날짜",
-            template="plotly_dark", height=520,
+            template="plotly_dark", height=540,
             legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0.5)"),
         )
         fig.update_yaxes(title_text="SK하이닉스 주가 (KRW, 원)", secondary_y=False)
         fig.update_yaxes(title_text="S&P 500 지수 (USD, pt)", secondary_y=True)
         st.plotly_chart(fig, use_container_width=True)
-        st.caption("💡 **이중 축 모드**: 좌측(원화)과 우측(포인트)에 독립된 축을 사용하여 두 자산의 흐름을 왜곡 없이 동시에 명확히 관찰합니다.")
+        st.caption("💡 **이중 축 모드**: 좌측(원화)과 우측(포인트)에 독립된 축을 사용하여 두 자산의 흐름과 이동평균선을 왜곡 없이 동시에 명확히 관찰합니다.")
 
     elif view == "로그 스케일 (Log Scale: 비율 성장률 왜곡 없는 비교)":
         fig = go.Figure()
@@ -180,19 +218,37 @@ with tab1:
             fig.add_trace(go.Scatter(
                 x=norm_hyx.index, y=norm_hyx.values,
                 name="SK하이닉스 (로그 정규화)", line=dict(color=C_HYX, width=2.5)))
+            if show_ma and len(norm_hyx) >= ma_short:
+                fig.add_trace(go.Scatter(
+                    x=norm_hyx.index, y=norm_hyx.rolling(ma_short).mean(),
+                    name=f"SK하이닉스 MA({ma_short}일)", line=dict(color=C_HYX, width=1.5, dash="dot")))
+            if show_ma and len(norm_hyx) >= ma_long:
+                fig.add_trace(go.Scatter(
+                    x=norm_hyx.index, y=norm_hyx.rolling(ma_long).mean(),
+                    name=f"SK하이닉스 MA({ma_long}일)", line=dict(color=C_HYX, width=1.5, dash="dash")))
+
         if "S&P 500" in assets and len(sp_close) > 0:
             norm_sp = sp_close / sp_close.iloc[0] * 100
             fig.add_trace(go.Scatter(
                 x=norm_sp.index, y=norm_sp.values,
                 name="S&P 500 (로그 정규화)", line=dict(color=C_SP, width=2.5)))
+            if show_ma and len(norm_sp) >= ma_short:
+                fig.add_trace(go.Scatter(
+                    x=norm_sp.index, y=norm_sp.rolling(ma_short).mean(),
+                    name=f"S&P 500 MA({ma_short}일)", line=dict(color=C_SP, width=1.5, dash="dot")))
+            if show_ma and len(norm_sp) >= ma_long:
+                fig.add_trace(go.Scatter(
+                    x=norm_sp.index, y=norm_sp.rolling(ma_long).mean(),
+                    name=f"S&P 500 MA({ma_long}일)", line=dict(color=C_SP, width=1.5, dash="dash")))
+
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.5,
                       annotation_text="기준점(100)")
         fig.update_layout(
-            title="로그 스케일(Log Scale) 정규화 수익률 비교 (시작일 = 100)",
+            title="로그 스케일(Log Scale) 정규화 수익률 비교 (시작일 = 100)" + (f" (MA {ma_short}일/{ma_long}일 포함)" if show_ma else ""),
             yaxis_title="정규화 지수 (로그 눈금)",
             xaxis_title="날짜",
             yaxis_type="log",
-            template="plotly_dark", height=520,
+            template="plotly_dark", height=540,
             legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0.5)"),
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -205,17 +261,35 @@ with tab1:
             fig.add_trace(go.Scatter(
                 x=norm.index, y=norm.values,
                 name="SK하이닉스", line=dict(color=C_HYX, width=2)))
+            if show_ma and len(norm) >= ma_short:
+                fig.add_trace(go.Scatter(
+                    x=norm.index, y=norm.rolling(ma_short).mean(),
+                    name=f"SK하이닉스 MA({ma_short}일)", line=dict(color=C_HYX, width=1.5, dash="dot")))
+            if show_ma and len(norm) >= ma_long:
+                fig.add_trace(go.Scatter(
+                    x=norm.index, y=norm.rolling(ma_long).mean(),
+                    name=f"SK하이닉스 MA({ma_long}일)", line=dict(color=C_HYX, width=1.5, dash="dash")))
+
         if "S&P 500" in assets and len(sp_close) > 0:
             norm = sp_close / sp_close.iloc[0] * 100
             fig.add_trace(go.Scatter(
                 x=norm.index, y=norm.values,
                 name="S&P 500", line=dict(color=C_SP, width=2)))
+            if show_ma and len(norm) >= ma_short:
+                fig.add_trace(go.Scatter(
+                    x=norm.index, y=norm.rolling(ma_short).mean(),
+                    name=f"S&P 500 MA({ma_short}일)", line=dict(color=C_SP, width=1.5, dash="dot")))
+            if show_ma and len(norm) >= ma_long:
+                fig.add_trace(go.Scatter(
+                    x=norm.index, y=norm.rolling(ma_long).mean(),
+                    name=f"S&P 500 MA({ma_long}일)", line=dict(color=C_SP, width=1.5, dash="dash")))
+
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.5)
         fig.update_layout(
-            title="정규화 선형 수익률 비교 (시작일 = 100)",
+            title="정규화 선형 수익률 비교 (시작일 = 100)" + (f" (MA {ma_short}일/{ma_long}일 포함)" if show_ma else ""),
             yaxis_title="정규화 지수 (선형 눈금)",
             xaxis_title="날짜",
-            template="plotly_dark", height=520,
+            template="plotly_dark", height=540,
             legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0.5)"),
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -225,6 +299,7 @@ with tab1:
 # TAB 2 — 이동평균 & 골든/데드 크로스
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tab2:
+    st.info(f"📌 현재 적용된 기준: **단기 이동평균선 {ma_short}일** (메인 컬러) vs **장기 이동평균선 {ma_long}일** (녹색 선) | 사이드바에서 일수를 조절하면 실시간으로 재계산됩니다.")
     target = st.radio("분석 대상", ["SK하이닉스", "S&P 500"], horizontal=True)
     close = hyx_close if target == "SK하이닉스" else sp_close
     color = C_HYX if target == "SK하이닉스" else C_SP
@@ -335,6 +410,7 @@ with tab3:
 # TAB 4 — STL 시계열 분해
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tab4:
+    st.info(f"📌 현재 적용된 STL 분석 주기: **{stl_period} 거래일** | 사이드바에서 STL 주기를 조절하면 실시간으로 분해 결과가 갱신됩니다.")
     target4 = st.radio("분석 대상  ", ["SK하이닉스", "S&P 500"], horizontal=True,
                         key="tab4_target")
     close4 = hyx_close if target4 == "SK하이닉스" else sp_close
